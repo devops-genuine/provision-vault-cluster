@@ -1,0 +1,116 @@
+## Default values for the image
+name: vault-operator
+replicaCount: 1
+image:
+  repository: selfieblue/vault-operator
+  tag: v1.0.1
+  pullPolicy: Always
+
+## Install Default RBAC roles and bindings
+rbac:
+  create: true
+
+## Service account names and whether to create them
+serviceAccount:
+  create: true
+  name: vault-operator-sa
+
+resources:
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+## additional command arguments go here; will be translated to `--key=value` form
+## e.g., analytics: true
+commandArgs: {}
+
+## Configurable health checks against the /readyz endpoint that vault-operator exposes
+readinessProbe:
+  enabled: false
+  initialDelaySeconds: 0
+  periodSeconds: 10
+  timeoutSeconds: 1
+  successThreshold: 1
+  failureThreshold: 3
+livenessProbe:
+  enabled: false
+  initialDelaySeconds: 0
+  periodSeconds: 10
+  timeoutSeconds: 1
+  successThreshold: 1
+  failureThreshold: 3
+
+nodeSelector: {
+  kubernetes.io/role: node
+}
+
+tolerations: []
+
+affinity:
+  podAntiAffinity: 
+    preferredDuringSchedulingIgnoredDuringExecution: 
+    - weight: 100  
+      podAffinityTerm:
+        labelSelector:
+          matchLabels:
+            kubernetes.io/role: node
+        topologyKey: kubernetes.io/hostname
+
+###
+# All of the config variables related to setting up the etcd-operator
+# Disabled by default
+# If you want more information about the variables exposed, please visit:
+#   https://github.com/kubernetes/charts/tree/master/stable/etcd-operator#configuration
+###
+etcd-operator:
+  enabled: true
+  etcdCluster:
+   name: "vault-cluster-01-etcd"
+   size: 3
+   pod:
+     antiAffinity: true
+     nodeSelector: {
+       kubernetes.io/role: node
+     }
+  resources:
+      limits:
+        cpu: 100m
+        memory: 128Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+  deployments:
+    etcdOperator: true
+    backupOperator: true
+    restoreOperator: true
+  serviceAccount:
+    etcdOperatorServiceAccount:
+      create: true
+    backupOperatorServiceAccount:
+      create: true
+    restoreOperatorServiceAccount:
+      create: true
+  etcdOperator:
+    image: 
+      repository: "selfieblue/etcd-operator"
+      tag: "v1.0.0"
+    nodeSelector: {
+      kubernetes.io/role: node
+    }
+  backupOperator:
+    image: 
+      repository: "selfieblue/etcd-operator"
+      tag: "v1.0.0"
+    nodeSelector: {
+      kubernetes.io/role: node
+    }
+  restoreOperator:
+    image: 
+      repository: "selfieblue/etcd-operator"
+      tag: "v1.0.0"
+    nodeSelector: {
+      kubernetes.io/role: node
+    }
